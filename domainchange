@@ -1,0 +1,21 @@
+#!/bin/bash
+#Can be grabbed from
+#wget https://raw.githubusercontent.com/lokerhp/Pterodactyl/master/domainchange?token=AGCT7DAEJJAAQ2JNW7S5PAC532LEK && bash 2X6sZVU
+echo 'Voer een nieuwe gewenste panel link (FQDN) in (ZONDER HTTPS/HTTP INVULLEN)'
+echo 'Let op: er moet al een A record aangemaakt zijn!';
+read fqdn
+rm -f /etc/nginx/sites-available/pterodactyl.conf
+rm -f /etc/nginx/sites-enabled/pterodactyl.conf
+systemctl restart nginx
+service nginx stop
+certbot certonly -d $fqdn
+curl -o /etc/nginx/sites-available/pterodactyl.conf https://raw.githubusercontent.com/lokerhp/Pterodactyl/master/nginxssl.conf
+sed -i -e "s/<domain>/${fqdn}/g" /etc/nginx/sites-available/pterodactyl.conf
+sudo ln -s /etc/nginx/sites-available/pterodactyl.conf /etc/nginx/sites-enabled/pterodactyl.conf
+service nginx start
+systemctl restart nginx
+echo "* Voer de juiste gegevens opnieuw in!"
+print_brake 88
+echo ""
+cd /var/www/pterodactyl && php artisan p:environment:setup
+echo "* Veranderen van domein is voltooid! je kan nu je domein bezoeken via https://$fqdn"
